@@ -1,22 +1,25 @@
-from datetime import datetime
+from flask import Flask
 
-from flask import Flask, render_template
-
-
-app = Flask(__name__)
-
-
-@app.route("/")
-def home_page():
-    today = datetime.today()
-    day_name = today.strftime("%A")
-    return render_template("home.html", day=day_name)
+import views
+from database import Database
+from earthquake import earthquake
 
 
-@app.route("/movies")
-def movies_page():
-    return render_template("movies.html")
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object("settings")
+
+    app.add_url_rule("/", view_func=views.home_page)
+    app.add_url_rule("/earthquake", view_func=views.earthquake_page)
+
+    db = Database()
+    db.add_earthquake(earthquake("Istanbul", year=2019))
+    app.config["db"] = db
+
+    return app
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app = create_app()
+    port = app.config.get("PORT", 5000)
+    app.run(host="0.0.0.0", port=port)
